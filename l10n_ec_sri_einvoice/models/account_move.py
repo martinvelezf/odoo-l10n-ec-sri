@@ -131,6 +131,87 @@ class AccountMove(models.Model):
         )
         return factura
 
+    def _l10n_ec_build_nota_credito(self):
+        """Map this credit note (out_refund) onto a library ``NotaCredito``."""
+        self.ensure_one()
+        try:
+            from sri_einvoice import Comprador, Detalle, Emisor, NotaCredito
+        except ImportError as exc:  # pragma: no cover - env guard
+            raise UserError(
+                _("The 'sri-einvoice' Python package is not installed on the server.")
+            ) from exc
+
+        company = self.company_id
+        partner = self.partner_id
+        if not company.vat:
+            raise UserError(_("The company has no RUC set."))
+
+        origin = self.reversed_entry_id
+        if not origin:
+            raise UserError(
+                _("A credit note must reference the invoice it modifies "
+                  "(set 'Reversal of' / reversed_entry_id).")
+            )
+        orig_sec = (origin.name or "").split("/")[-1].zfill(9)[-9:]
+        estab = company.l10n_ec_sri_estab or "001"
+        pto_emi = company.l10n_ec_sri_pto_emi or "001"
+        num_doc_modificado = f"{estab}-{pto_emi}-{orig_sec}"
+
+        emisor = Emisor(
+            ruc=company.vat,
+            razon_social=company.name,
+            dir_matriz=company.street or "",
+            nombre_comercial=company.name,
+            dir_establecimiento=company.street or None,
+            obligado_contabilidad="SI"
+            if company.l10n_ec_sri_obligado_contabilidad
+            else "NO",
+        )
+        ident = partner.vat or "9999999999999"
+        tipo_ident = "04" if len(ident) == 13 else "05"
+        comprador = Comprador(
+            tipo_identificacion=tipo_ident,
+            identificacion=ident,
+            razon_social=partner.name or "CONSUMIDOR FINAL",
+            direccion=partner.street or None,
+            email=partner.email or None,
+        )
+
+        detalles = []
+        for line in self.invoice_line_ids.filtered(
+            lambda l: l.display_type in (False, "product")
+        ):
+            rate = max((t.amount for t in line.tax_ids), default=0.0)
+            iva_code = _IVA_CODE_BY_RATE.get(rate, "4")
+            detalles.append(
+                Detalle(
+                    descripcion=line.name or (line.product_id.display_name or "-"),
+                    cantidad=line.quantity,
+                    precio_unitario=line.price_unit,
+                    codigo_principal=line.product_id.default_code or None,
+                    descuento=line.price_unit * line.quantity
+                    * (line.discount or 0.0) / 100.0,
+                    iva_codigo_porcentaje=iva_code,
+                )
+            )
+        if not detalles:
+            raise UserError(_("The credit note has no billable lines."))
+
+        return NotaCredito(
+            emisor=emisor,
+            comprador=comprador,
+            fecha_emision=self.invoice_date or date.today(),
+            estab=estab,
+            pto_emi=pto_emi,
+            secuencial=(self.name or "").split("/")[-1].zfill(9)[-9:] or "000000001",
+            detalles=detalles,
+            cod_doc_modificado="01",
+            num_doc_modificado=num_doc_modificado,
+            fecha_emision_doc_sustento=origin.invoice_date or self.invoice_date or date.today(),
+            motivo=self.ref or _("Nota de credito"),
+            ambiente="2" if company.l10n_ec_sri_ambiente == "produccion" else "1",
+        )
+
     def _l10n_ec_signing_identity(self):
         self.ensure_one()
         company = self.company_id
@@ -160,21 +241,28 @@ class AccountMove(models.Model):
     # actions
     # ------------------------------------------------------------------
     def action_sri_build_sign(self):
-        from sri_einvoice.xmlbuild import build_factura_xml, to_bytes
+        from sri_einvoice.xades import sign_xml
+        from sri_einvoice.xmlbuild import (
+            build_factura_xml,
+            build_nota_credito_xml,
+            to_bytes,
+        )
 
         for move in self:
             if move.move_type not in ("out_invoice", "out_refund"):
                 raise UserError(_("Only customer invoices can be issued to the SRI."))
-            factura = move._l10n_ec_build_factura()
-            root = build_factura_xml(factura)
+            if move.move_type == "out_refund":
+                comprobante = move._l10n_ec_build_nota_credito()
+                root = build_nota_credito_xml(comprobante)
+            else:
+                comprobante = move._l10n_ec_build_factura()
+                root = build_factura_xml(comprobante)
             identity = move._l10n_ec_signing_identity()
-            from sri_einvoice.xades import sign_xml
-
             signed = sign_xml(
                 to_bytes(root), identity, algorithm=move.company_id.l10n_ec_sri_algorithm
             )
-            move.l10n_ec_clave_acceso = factura.clave_acceso
-            move._l10n_ec_attach(f"{factura.clave_acceso}.xml", signed)
+            move.l10n_ec_clave_acceso = comprobante.clave_acceso
+            move._l10n_ec_attach(f"{comprobante.clave_acceso}.xml", signed)
             move.l10n_ec_sri_state = "signed"
         return True
 
