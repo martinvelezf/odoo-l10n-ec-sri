@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_sri" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.l10n_ec_sri</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="account.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//block[@id='accounting_localizations']" position="inside">
+                <setting id="l10n_ec_sri_setting"
+                         string="Ecuador SRI e-Invoicing"
+                         help="Sign and send electronic invoices to the SRI">
+                    <div class="content-group">
+                        <div class="row mt16">
+                            <label for="l10n_ec_sri_ambiente" class="col-lg-4 o_light_label"/>
+                            <field name="l10n_ec_sri_ambiente"/>
+                        </div>
+                        <div class="row">
+                            <label for="l10n_ec_sri_estab" class="col-lg-4 o_light_label"/>
+                            <field name="l10n_ec_sri_estab"/>
+                        </div>
+                        <div class="row">
+                            <label for="l10n_ec_sri_pto_emi" class="col-lg-4 o_light_label"/>
+                            <field name="l10n_ec_sri_pto_emi"/>
+                        </div>
+                        <div class="row">
+                            <label for="l10n_ec_sri_obligado_contabilidad" class="col-lg-4 o_light_label"/>
+                            <field name="l10n_ec_sri_obligado_contabilidad"/>
+                        </div>
+                        <div class="row">
+                            <label for="l10n_ec_sri_algorithm" class="col-lg-4 o_light_label"/>
+                            <field name="l10n_ec_sri_algorithm"/>
+                        </div>
+                        <div class="row">
+                            <label for="l10n_ec_sri_p12" class="col-lg-4 o_light_label"/>
+                            <field name="l10n_ec_sri_p12" filename="l10n_ec_sri_p12_filename"/>
+                            <field name="l10n_ec_sri_p12_filename" invisible="1"/>
+                        </div>
+                        <div class="row">
+                            <label for="l10n_ec_sri_p12_password" class="col-lg-4 o_light_label"/>
+                            <field name="l10n_ec_sri_p12_password" password="True"/>
+                        </div>
+                        <div class="text-muted">
+                            Prefer the SRI_P12_PASSWORD environment variable; it overrides the stored password.
+                        </div>
+                    </div>
+                </setting>
+            </xpath>
+        </field>
+    </record>
+</odoo>

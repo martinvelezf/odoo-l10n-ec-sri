@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_sri_account_move_user,account.move.sri.user,account.model_account_move,account.group_account_invoice,1,1,0,0
+access_sri_account_move_manager,account.move.sri.manager,account.model_account_move,account.group_account_manager,1,1,1,1

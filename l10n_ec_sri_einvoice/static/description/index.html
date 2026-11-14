@@ -1,0 +1,43 @@
+<section class="oe_container">
+  <div class="oe_row oe_spaced">
+    <h2 class="oe_slogan">Ecuador SRI e-Invoicing</h2>
+    <h3 class="oe_slogan">Sign, send and authorize SRI electronic invoices from Odoo</h3>
+    <p class="oe_mt32">
+      Turn a posted customer invoice into an authorized SRI <em>factura</em> without
+      leaving Odoo: build the XML, compute the 49-digit <em>clave de acceso</em>,
+      sign it with your .p12 (XAdES-BES), send it to the SRI recepción/autorización
+      web services and attach the authorized XML and a RIDE PDF.
+    </p>
+  </div>
+</section>
+<section class="oe_container oe_dark">
+  <div class="oe_row oe_spaced">
+    <h3 class="oe_slogan">What it does</h3>
+    <ul>
+      <li><b>One toolbar</b> on the invoice: Sign → Send → Authorize, with a status bar.</li>
+      <li><b>Hardware-grade signing.</b> XAdES-BES signature, RSA-SHA1 (SRI profile) or SHA256.</li>
+      <li><b>Pruebas and Producción</b> environments, selectable per company.</li>
+      <li><b>Authorized XML + RIDE PDF</b> attached automatically to the invoice.</li>
+      <li><b>No duplicated logic.</b> A thin layer over the audited, framework-agnostic
+          <code>sri-einvoice</code> engine (Apache-2.0).</li>
+    </ul>
+  </div>
+</section>
+<section class="oe_container">
+  <div class="oe_row oe_spaced">
+    <h3 class="oe_slogan">Security</h3>
+    <ul>
+      <li>The certificate password is read from the <code>SRI_P12_PASSWORD</code>
+          environment variable first; the stored field is a single-tenant fallback.</li>
+      <li>Signing material is never written to the log.</li>
+      <li>Access limited to Accounting users (sign/send) and managers.</li>
+    </ul>
+  </div>
+</section>
+<section class="oe_container oe_dark">
+  <div class="oe_row oe_spaced">
+    <h3 class="oe_slogan">Requirements</h3>
+    <p>Python packages on the Odoo server: <code>lxml</code>, <code>cryptography</code>,
+       and <code>sri-einvoice</code>. Odoo 17.0, Accounting app.</p>
+  </div>
+</section>
