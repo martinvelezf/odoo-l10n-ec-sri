@@ -1,7 +1,7 @@
 # License: LGPL-3
 {
     "name": "Ecuador SRI e-Invoicing (XAdES-BES)",
-    "version": "17.0.1.0.0",
+    "version": "19.0.1.0.0",
     "summary": "Sign, send and authorize Ecuador SRI electronic invoices from Odoo",
     "description": """
 Ecuador SRI electronic invoicing for Odoo
